@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
         color:colors.text,
         fontWeight: "500",
     },
-    buttomPrimay:{
+    buttomPrimary:{
         backgroundColor:colors.primary
     },
     buttomSecundary:{

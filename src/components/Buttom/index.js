@@ -1,12 +1,16 @@
-import { Text, TouchableOpacity } from "react-native";
+import { Alert, Text, TouchableOpacity } from "react-native";
 import { styles } from "./styles";
 
 
-export default function Button(){
+export default function Button({variant , onPress,  currency, isSelect}){
     return(
-       <TouchableOpacity style={styles.buttom}>
+       <TouchableOpacity
+       onPress={onPress}
+       style={[styles.buttom,
+        isSelect && (variant === 'primary' ? styles.buttomPrimary : styles.buttomSecundary)
+       ]}>
         <Text style={styles.bottomText}>
-           Clique aqui 
+         {currency.code}  
         </Text>
        </TouchableOpacity>
     )
