@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,29 +16,45 @@ import { Input } from "./src/components/Input";
 import { exchangeRateApi } from "./src/services/Api";
 import { useState } from "react";
 import { convertCurrency } from "./src/utils/convertCurrency";
-
-
-
+import ResultCard from "./src/components/ResultCrad";
 
 export default function App() {
-  const [amount, setAmount] = useState('')
-  const [fromCurrency, setFromCurrency] = useState('')
-  const [toCurrency, setToCurrency] = useState('BRL')
-  const [result, setResult] = useState('')
-  const [loading, setLoading] = useState('')
-  const [exChangeRate, setExchangeRate] = useState('')
+  const [amount, setAmount] = useState("");
+  const [fromCurrency, setFromCurrency] = useState("");
+  const [toCurrency, setToCurrency] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [exChangeRate, setExchangeRate] = useState(null);
 
-  async function fetchExchangeRate(){
-   const data = await exchangeRateApi(fromCurrency)
-   const rate = data.rates[toCurrency]
-   const coverted = convertCurrency(amount, rate)
-   setResult(coverted)
+  async function fetchExchangeRate() {
+
+    try{
+       const data = await exchangeRateApi(fromCurrency);
+    const rate = data.rates[toCurrency];
+    setLoading(true);
+    if (!amount) return;
+
+    setExchangeRate(rate);
+    const coverted = convertCurrency(amount, rate);
+
+    setResult(coverted);
+
+    }catch(err){
+      alert('erro tente novamente')
+    }finally{
+      setLoading(false)
+    }
+  }
+
+  function swap(){
+    setFromCurrency(toCurrency)
+    setToCurrency(fromCurrency)
+    setResult('')
 
   }
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "height" : "padding"}
-  
       style={styles.container}
     >
       <ScrollView style={styles.scrollView}>
@@ -46,62 +63,69 @@ export default function App() {
 
           <View style={styles.header}>
             <Text style={styles.title}>Converso de Moedas</Text>
-            <Text style={styles.subTitle}>Converta valores entre diferentes moedas</Text>
+            <Text style={styles.subTitle}>
+              Converta valores entre diferentes moedas
+            </Text>
           </View>
 
           <View style={styles.card}>
             <Text style={styles.label}>De:</Text>
 
             <View style={styles.currencyGrid}>
-                {currencies.map((currency) => (
-                  <Button 
-                    onPress={()=>setFromCurrency(currency.code)}
-                    key={currency.code}
-                    variant="primary"
-                    currency={currency}
-                    isSelect={fromCurrency === currency.code}
-                  ></Button>
-                ))}
-           
+              {currencies.map((currency) => (
+                <Button
+                  onPress={() => setFromCurrency(currency.code)}
+                  key={currency.code}
+                  variant="primary"
+                  currency={currency}
+                  isSelect={fromCurrency === currency.code}
+                ></Button>
+              ))}
             </View>
-                <Input
-                onChangeText={setAmount}
-                value={amount} 
-                label='valor'/>
+            <Input onChangeText={setAmount} value={amount} label="valor" />
 
-                <TouchableOpacity style={styles.swapBottom}>
-                  <Text style={styles.swapBottomText}>
-                    ↑↓
-                  </Text>
-                </TouchableOpacity>
+            <TouchableOpacity 
+            onPress={swap}
+            
+            style={styles.swapBottom}>
+              <Text style={styles.swapBottomText}>↑↓</Text>
+            </TouchableOpacity>
 
-                <Text style={styles.label}>
-                  para:
-                </Text>
-                <View style={styles.currencyGrid}>
-                  {currencies.map((currency) => (
-                  <Button
-                    onPress={()=>setToCurrency(currency.code)}
-                    key={currency.code}
-                    variant="secondary"
-                    currency={currency}
-                    isSelect={toCurrency === currency.code}
-                  ></Button>
-                ))}
-
-                </View>
-
+            <Text style={styles.label}>para:</Text>
+            <View style={styles.currencyGrid}>
+              {currencies.map((currency) => (
+                <Button
+                  onPress={() => setToCurrency(currency.code)}
+                  key={currency.code}
+                  variant="secondary"
+                  currency={currency}
+                  isSelect={toCurrency === currency.code}
+                ></Button>
+              ))}
+            </View>
           </View>
 
-         <TouchableOpacity
-         onPress={fetchExchangeRate}
-         style={styles.convertBottom}>
-          <Text style={styles.swapBottomText}>
-            Converter
-          </Text>
-         </TouchableOpacity>
+          <TouchableOpacity
+            onPress={fetchExchangeRate}
+            style={[
+              styles.convertBottom,
+              (!amount || loading) && styles.convertBottomDisabled,
+            ]}
+            disabled={!amount || loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.swapBottomText}>Converter</Text>
+            )}
+          </TouchableOpacity>
 
-
+          <ResultCard
+            exChangeRate={exChangeRate}
+            result={result}
+            fromCurrency={fromCurrency}
+            toCurrency={toCurrency}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
